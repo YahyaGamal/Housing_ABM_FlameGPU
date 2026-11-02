@@ -1,7 +1,7 @@
 # FlameGPU Housing Agent Based Model (ABM)
 <!-- ![Image](https://github.com/YahyaGamal/Housing_ABM_FlameGPU/blob/main/logo.jpg) -->
 <p align="center">
-  <img src="https://github.com/YahyaGamal/Housing_ABM_FlameGPU/blob/main/logo.jpg" alt="Project Logo" width="300">
+  <img src="https://github.com/YahyaGamal/Housing_ABM_FlameGPU/blob/main/logo.jpg" alt="Project Logo" width="200">
 </p>
 
 # Model description
