@@ -1,5 +1,8 @@
 # FlameGPU Housing Agent Based Model (ABM)
-![Image](https://github.com/YahyaGamal/Housing_ABM_FlameGPU/blob/main/logo.jpg)
+<!-- ![Image](https://github.com/YahyaGamal/Housing_ABM_FlameGPU/blob/main/logo.jpg) -->
+<p align="center">
+  <img src="https://github.com/YahyaGamal/Housing_ABM_FlameGPU/blob/main/logo.jpg" alt="Project Logo" width="300">
+</p>
 
 # Model description
 The model simulates an abstract housing market with cash payments only. 
