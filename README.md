@@ -5,7 +5,7 @@
 </p>
 
 # Model description
-The model simulates an abstract housing market with cash payments only. 
+The model simulates an abstract housing market with cash payments only.  
 Households having high capital (above a defined threshold) go into the housing market and buy a house within their budget.
 
 The model is designed to showcase the efficiency gains from FlameGPU, compared to NetLogo.
