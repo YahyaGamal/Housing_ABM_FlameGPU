@@ -66,6 +66,10 @@ def define_agents(model):
     h.newVariableInt("constructed?")
     h.newVariableInt("x")
     h.newVariableInt("y")
+    if pyflamegpu.VISUALISATION: # float value required for visualisation
+        h.newVariableFloat("pos_x")
+        h.newVariableFloat("pos_y")
+        h.newVariableFloat("pos_z")
     h.newVariableInt("my_owner")    # ID of the household
     h.newVariableInt("price")
     h.newVariableInt("offered_to")  # ID of the household who made an offer
@@ -597,6 +601,10 @@ def initialise_population(
         ## Allocate the patch's x and y variables
         patch.setVariableInt("x", x)
         patch.setVariableInt("y", y)
+        if pyflamegpu.VISUALISATION:
+            patch.setVariableFloat("pos_x", float(x))
+            patch.setVariableFloat("pos_y", float(y))
+            patch.setVariableFloat("pos_z", float(0.0))
         ## Construct houses based on DENSITY
         if random.random() <= density:
             patch.setVariableInt("constructed?", True)
@@ -688,6 +696,7 @@ def initialise_simulation(
     cuda_simulation = pyflamegpu.CUDASimulation(model)
     cuda_simulation.setPopulationData(init_patches)
     cuda_simulation.setPopulationData(init_occupiers)
+    cuda_simulation.initialise(sys.argv)
 
     return cuda_simulation
 
@@ -759,5 +768,98 @@ def execute_simulation(
         cuda_simulation.step()
         if extract_data != False and i in extract_data: cuda_simulation.exportData(f"data/{i+1}.json")
     print("Simulation complete")
+
+def execute_visual_simulation(
+        extract_data:range|list|bool=False, 
+        seed:int=SEED,
+        dimension:int=DIM,
+        density:float=DENSITY, 
+        occupancy:float=OCCUPANCY, 
+        price:list=PRICE, 
+        capital:list=CAPITAL,
+        simulation_steps:int=SIMULATION_STEPS
+        ):
+    """
+    Initialise and execute the simulation.
+
+    Parameters
+    ----------
+    `extract_data`: range or list or bool
+        The range or list of time steps to extract the data for in `./data`.
+        If `False`, no data is extracted.
+        Defaults to `False`.
+    `dimension`: int
+        Dimension of the model space (square space).
+        Defaults to 50x50.
+    `seed`: int
+        Run seed.
+        Defaults to a random number between 1 and 9999999999
+    `density`: float
+        The housing construction density.
+        Defaults to 0.8.
+    `occupancy`: float
+        The occupancy rate of the houses in the system.
+        Defaults to 0.8.
+    `price`: list
+        The range of initial prices.
+        Defaults to `[300000, 300001]`
+    `capital`: list
+        The range of initial capital.
+        Defaults to `[200000, 200001]`
+    `simulation_steps`: int
+        The number of simulated time steps.
+        Defaults to 100.
+    """
+    # delete previous data
+    if extract_data != False:
+        if os.path.exists("data"):
+            shutil.rmtree("data")
+        os.mkdir("data")
+
+    cuda_simulation = initialise_simulation(
+        dimension=dimension,
+        density=density,
+        occupancy=occupancy,
+        capital=capital,
+        price=price,
+        seed=seed
+        )
+    # Log the initial state
+    if extract_data != False: cuda_simulation.exportData(f"data/0.json")
+    print("Setup complete")
+    # Set the seed
+    cuda_simulation.SimulationConfig().random_seed = seed
+    cuda_simulation.applyConfig()
+
+    if pyflamegpu.VISUALISATION:
+        visualisation = cuda_simulation.getVisualisation()
+        visualisation.setClearColor(0, 0, 0)
+        visualisation.setInitialCameraLocation(dimension / 2.0, dimension / 2.0, dimension)
+        visualisation.setInitialCameraTarget(dimension / 2.0, dimension /2.0, 0.0)
+        visualisation.setCameraSpeed(0.001 * dimension)
+        visualisation.setOrthographic(True)
+        visualisation.setOrthographicZoomModifier(0.1)
+        visualisation.setViewClips(0.1, 5000)
+
+        agt = visualisation.addAgent("house")
+        agt.setModel(pyflamegpu.CUBE)
+        agt.setModelScale(1.0)
+        agt.setXVariable("pos_x")
+        agt.setYVariable("pos_y")
+        agt.setZVariable("pos_z")
+        cmap = pyflamegpu.iDiscreteColor("constructed?", pyflamegpu.WHITE)
+        cmap[0] = pyflamegpu.WHITE
+        cmap[1] = pyflamegpu.GREEN
+        cmap[2] = pyflamegpu.RED
+        cmap[2] = pyflamegpu.Color(1.0, 0.5, 0.5) # dark red
+        agt.setColor(cmap)
+
+        visualisation.activate()
+
+        cuda_simulation.simulate()
+    else:
+        print("Visualisation was attempted but either the pyflamegpu wheel is a non visualisation build or it is disabled.")
+
+
 
 
